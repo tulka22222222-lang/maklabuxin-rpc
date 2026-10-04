@@ -1,4 +1,4 @@
-package hachclient.module.render; // поменяй на свой пакет
+package ru.hachclient.modules.impl.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.BufferRenderer;
@@ -8,8 +8,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryStack;
-
-// + импорты из клиента: Module, Event, EventListener, EventRender
+import ru.hachclient.modules.Module;
+import ru.hachclient.modules.ModuleType;
 
 /**
  * SkyShader в стиле космоса: звёзды, туманности, полоса галактики, солнце
@@ -20,7 +20,7 @@ import org.lwjgl.system.MemoryStack;
  */
 public class SkyShader extends Module {
 
-    // Настройки. Если в клиенте есть Slider/ColorSetting — перенеси на них.
+    // Настройки.
     public float speed = 1.0f;
     public float starDensity = 0.7f;
     public float nebulaStrength = 0.8f;
@@ -45,7 +45,7 @@ public class SkyShader extends Module {
     };
 
     public SkyShader() {
-        super("SkyShader"); // подгони под конструктор Module в клиенте
+        super("SkyShader", "Космическое небо: звёзды, туманности, планета", ModuleType.RENDER);
     }
 
     private void renderSkyShader(MatrixStack stack) {
