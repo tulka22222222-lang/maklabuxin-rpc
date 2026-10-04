@@ -14,7 +14,7 @@ import ru.hachclient.modules.settings.impl.NumberSetting;
 
 import static ru.hachclient.Hachclient.mc;
 
-// created by b0b0l1 -> 30.09.2026
+// by ls5sq
 /**
  * Ambience: настоящая насыщенность цвета мира через пост-шейдер.
  * После рендера мира кадр копируется в текстуру и перерисовывается
