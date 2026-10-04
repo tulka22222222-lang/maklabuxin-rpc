@@ -17,8 +17,8 @@ import org.lwjgl.opengl.GL11;
 // + импорты из клиента: Module, Event, EventListener, EventRender
 
 /**
- * SkyShader: рисует поверх ванильного неба купол со своим шейдером
- * (градиент, звёзды, северное сияние). Блоки, энтити и облака остаются
+ * SkyShader в стиле космоса: поверх ванильного неба рисуется купол со своим
+ * шейдером (звёзды, туманности, полоса галактики, планета с кольцами). Блоки, энтити и облака остаются
  * спереди, потому что купол прижат к дальней плоскости и рисуется с GL_LEQUAL.
  */
 public class SkyShader extends Module {
@@ -34,12 +34,13 @@ public class SkyShader extends Module {
 
     // Настройки. Если в клиенте есть Slider/ColorSetting — перенеси на них.
     public float speed = 1.0f;
-    public float starsAmount = 0.6f;
-    public float auroraStrength = 0.8f;
+    public float starDensity = 0.7f;
+    public float nebulaStrength = 0.8f;
+    public float planetSize = 0.12f;
     public float opacity = 1.0f;
-    public float[] topColor = {0.05f, 0.07f, 0.25f};
-    public float[] horizonColor = {0.55f, 0.25f, 0.55f};
-    public float[] auroraColor = {0.20f, 1.00f, 0.60f};
+    public float[] nebulaColor1 = {0.45f, 0.10f, 0.75f};
+    public float[] nebulaColor2 = {0.05f, 0.45f, 0.85f};
+    public float[] planetColor = {0.95f, 0.55f, 0.30f};
 
     private final long startTime = System.currentTimeMillis();
 
@@ -67,12 +68,13 @@ public class SkyShader extends Module {
         }
         float time = (System.currentTimeMillis() - startTime) / 1000.0f * speed;
         setUniform(program, "Time", time);
-        setUniform(program, "StarsAmount", starsAmount);
-        setUniform(program, "AuroraStrength", auroraStrength);
+        setUniform(program, "StarDensity", starDensity);
+        setUniform(program, "NebulaStrength", nebulaStrength);
+        setUniform(program, "PlanetSize", planetSize);
         setUniform(program, "Opacity", opacity);
-        setUniform(program, "TopColor", topColor);
-        setUniform(program, "HorizonColor", horizonColor);
-        setUniform(program, "AuroraColor", auroraColor);
+        setUniform(program, "NebulaColor1", nebulaColor1);
+        setUniform(program, "NebulaColor2", nebulaColor2);
+        setUniform(program, "PlanetColor", planetColor);
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
