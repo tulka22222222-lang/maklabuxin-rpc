@@ -45,7 +45,7 @@ public class SkyShader extends Module {
     };
 
     public SkyShader() {
-        super("SkyShader", "Космическое небо: звёзды, туманности, планета", ModuleType.RENDER);
+        super("SkyShader", "Космическое небо: звёзды, туманности, планета", ModuleType.VISUAL);
     }
 
     private void renderSkyShader(MatrixStack stack) {
