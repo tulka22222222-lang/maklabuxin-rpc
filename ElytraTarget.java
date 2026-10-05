@@ -12,8 +12,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.PendingUpdateManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.*;
@@ -25,7 +26,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector2f;
 import ru.hachclient.events.impl.*;
-import ru.hachclient.mixin.accessors.ClientWorldMixin;
+import ru.hachclient.mixin.accessors.ClientPlayerInteractionManagerAccessor;
+import ru.hachclient.mixin.accessors.FireworkRocketAccesor;
 import ru.hachclient.mixin.accessors.LivingEntityAccessor;
 import ru.hachclient.modules.Module;
 import ru.hachclient.modules.ModuleManager;
@@ -39,7 +41,6 @@ import ru.hachclient.rotation.GCDUtil;
 import ru.hachclient.rotation.RotationUtil;
 import ru.hachclient.utils.*;
 import ru.hachclient.utils.game.HealthResolver;
-import ru.hachclient.utils.game.InvUtil;
 import ru.hachclient.utils.game.PlayerUtil;
 import ru.hachclient.utils.math.TimerUtil;
 import ru.hachclient.utils.mixins.ConnectionMixinHelper;
@@ -52,7 +53,7 @@ import ru.hachclient.utils.targets.TargetValidator;
 public class ElytraTarget extends Module {
   public ElytraTarget() {
     super("ElytraTarget", "", ModuleType.COMBAT);
-    addSettings(autofirework, fireworkdelay, distance, antiaim, antiaimVector, antiaimCondition, fakelag, sendmisses, delayedAntiaim, freeze, pingAdaptive, debug);
+    addSettings(autofirework, fireworkdelay, distance, antiaim, antiaimVector, antiaimCondition, fakelag, sendmisses, delayedAntiaim, freeze, rideEnemy, autoStoyak, fakeRot, shavel, pingAdaptive, debug);
   }
 
   BooleanSetting autofirework = new BooleanSetting("Auto firework", true);
@@ -70,6 +71,10 @@ public class ElytraTarget extends Module {
   BooleanSetting sendmisses = new BooleanSetting("Rage bait target", true);
   BooleanSetting delayedAntiaim = new BooleanSetting("Delay anti-aim", false);
   BooleanSetting freeze = new BooleanSetting("Freeze player", false);
+  BooleanSetting rideEnemy = new BooleanSetting("Ride enemy", false);
+  public BooleanSetting autoStoyak = new BooleanSetting("Auto motion", false);
+  public BooleanSetting fakeRot = new BooleanSetting("Fake rotation", false);
+  BooleanSetting shavel = new BooleanSetting("Shavel message", false);
   BooleanSetting pingAdaptive = new BooleanSetting("Ping adaptive", false);
   BooleanSetting debug = new BooleanSetting("Debug", false);
 
@@ -92,6 +97,7 @@ public class ElytraTarget extends Module {
 
   final CopyOnWriteArrayList<Packet<?>> packets = new CopyOnWriteArrayList<>();
   Vec3d lastPosPinged, lastResolved;
+  LivingEntity lastKilled = null;
 
   long lastPinged = 0;
   int calculatedPing = 0;
@@ -105,7 +111,6 @@ public class ElytraTarget extends Module {
   Vec3d antiaimvec = Vec3d.ZERO;
   boolean antiaimDirection = false;
   int attacking = 0;
-  double lastSpeed = 0.0;
 
   final ArrayList<Vec3d> antiaimvectors = new ArrayList<>(Arrays.asList(
       new Vec3d(0, 18, 0),
@@ -183,6 +188,11 @@ public class ElytraTarget extends Module {
     if (lastResolved == null)
       lastResolved = Vec3d.ZERO;
 
+    if (shavel.get() && target != null && target.deathTime > 0 && target != lastKilled) {
+      mc.getNetworkHandler().sendChatMessage(String.format("!%s похоже, у вас щавель!", target.getName().getString()));
+      lastKilled = target;
+    }
+
     if (target == null || !validator.validate(target)) {
       target = TargetUtil.findTarget(TargetUtil.Sorting.DISTANCE, distance.get(), validator);
       if (target != TargetUtil.prevtarget)
@@ -221,6 +231,16 @@ public class ElytraTarget extends Module {
 
     if (target instanceof AbstractClientPlayerEntity pl) {
       trackMisses(pl);
+    }
+
+    // Ride enemy: зависаем над целью, гасим горизонтальную скорость.
+    if (rideEnemy.get() && mc.player.distanceTo(target) < 2 && !leaving()) {
+      mc.player.setVelocity(0, mc.player.getVelocity().y, 0);
+    }
+    // Auto motion: если цель стоит или не улетает, а мы над ней, прижимаемся вниз.
+    if (autoStoyak.get() && mc.player.distanceTo(target) < 3 && (!leaving() || stoyak) && mc.player.getY() > target.getY()) {
+      mc.player.setVelocity(0, -0.08, 0);
+      send();
     }
 
     if (!stoyak) {
@@ -264,25 +284,50 @@ public class ElytraTarget extends Module {
       history.removeFirst();
   }
 
+  // Ракета запускается, только когда наша прошлая уже догорела, и не чаще fireworkdelay.
   private void useFirework() {
-    double currentSpeed = Math.hypot(mc.player.getX() - mc.player.prevX, Math.hypot(mc.player.getY() - mc.player.prevY, mc.player.getZ() - mc.player.prevZ)) * 20d;
-    if (autofirework.get() && fireworktimer.hasTimeElapsed(currentSpeed < lastSpeed ? 300 : (long) fireworkdelay.get(), true)) {
-      int slot = InvUtil.get(Items.FIREWORK_ROCKET);
-      int selected = mc.player.getInventory().selectedSlot;
-      if (slot != -1 && slot < 9) {
-        ConnectionMixinHelper.NO_EVENT = true;
-        if (selected != slot)
-          mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(slot));
-        try (PendingUpdateManager pending = ((ClientWorldMixin) mc.world).hachclient$getPendingUpdateManager().incrementSequence()) {
-          Vector2f rot = getInstance().getRotation().getCurrent();
-          mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, pending.getSequence(), rot.x, rot.y));
-        }
-        if (selected != slot)
-          mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(selected));
-        ConnectionMixinHelper.NO_EVENT = false;
+    if (!autofirework.get() || hasActiveFirework() || !fireworktimer.hasTimeElapsed((long) fireworkdelay.get()))
+      return;
+
+    int slot = -1;
+    for (int i = 0; i < 9; i++) {
+      if (mc.player.getInventory().getStack(i).isOf(Items.FIREWORK_ROCKET)) {
+        slot = i;
+        break;
       }
     }
-    lastSpeed = currentSpeed;
+    if (slot == -1)
+      return;
+
+    // Мимо очереди фейклага: ракета должна уйти сразу.
+    ConnectionMixinHelper.NO_EVENT = true;
+    int last = mc.player.getInventory().selectedSlot;
+    mc.player.getInventory().selectedSlot = slot;
+    mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+    mc.player.getInventory().selectedSlot = last;
+    ((ClientPlayerInteractionManagerAccessor) mc.interactionManager).hachclient$syncSelectedSlot();
+    ConnectionMixinHelper.NO_EVENT = false;
+
+    fireworktimer.reset();
+  }
+
+  private boolean hasActiveFirework() {
+    for (Entity entity : mc.world.getEntities()) {
+      if (entity instanceof FireworkRocketEntity rocket && !rocket.isRemoved()
+          && ((FireworkRocketAccesor) rocket).getShooter() instanceof ClientPlayerEntity) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Fake rotation: во время антиаима ракета тянет в сторону антиаима, а не на цель.
+  public void onRocketBoost(EventRocketBoost e) {
+    if (fakeRot.get() && target != null && !rotating) {
+      Vector2f raw = RotationUtil.calculate(mc.player.getPos().add(antiaimvec));
+      e.yaw = raw.x;
+      e.pitch = raw.y;
+    }
   }
 
   private void trackMisses(AbstractClientPlayerEntity pl) {
