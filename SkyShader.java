@@ -8,6 +8,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryStack;
+import ru.hachclient.events.Event;
+import ru.hachclient.events.EventListener;
+import ru.hachclient.events.impl.EventRender;
 import ru.hachclient.modules.Module;
 import ru.hachclient.modules.ModuleType;
 
