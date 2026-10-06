@@ -2,7 +2,7 @@ package ru.hachclient.mixin;
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.render.VertexConsumerProvider;
 // created by ЗНАХАРКА АФТОДИЯ
 import net.minecraft.client.render.item.HeldItemRenderer;
 // created by ЗНАХАРКА АФТОДИЯ
@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.Mixin;
 // created by ЗНАХАРКА АФТОДИЯ
 import org.spongepowered.asm.mixin.injection.At;
 // created by ЗНАХАРКА АФТОДИЯ
-import org.spongepowered.asm.mixin.injection.Inject;
-// created by ЗНАХАРКА АФТОДИЯ
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 // created by ЗНАХАРКА АФТОДИЯ
 import ru.hachclient.modules.impl.render.Hands;
+// created by ЗНАХАРКА АФТОДИЯ
+import ru.hachclient.utils.render.HandsTintProvider;
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
@@ -22,41 +22,35 @@ import ru.hachclient.modules.impl.render.Hands;
 // created by ЗНАХАРКА АФТОДИЯ
 public class HandsItemRendererMixin {
 // created by ЗНАХАРКА АФТОДИЯ
+    private static long hachclient$lastLog;
+// created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    @Inject(method = "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", at = @At("HEAD"))
+    @ModifyArg(
 // created by ЗНАХАРКА АФТОДИЯ
-    private void hachclient$handsStart(CallbackInfo ci) {
+            method = "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V",
+// created by ЗНАХАРКА АФТОДИЯ
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderFirstPersonItem(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/util/Hand;FLnet/minecraft/item/ItemStack;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"),
+// created by ЗНАХАРКА АФТОДИЯ
+            index = 8
+// created by ЗНАХАРКА АФТОДИЯ
+    )
+// created by ЗНАХАРКА АФТОДИЯ
+    private VertexConsumerProvider hachclient$tintHands(VertexConsumerProvider provider) {
 // created by ЗНАХАРКА АФТОДИЯ
         Hands hands = Hands.INSTANCE;
 // created by ЗНАХАРКА АФТОДИЯ
-        if (hands == null || !hands.state() || !hands.isFill()) return;
+        if (System.currentTimeMillis() - hachclient$lastLog > 2000) {
 // created by ЗНАХАРКА АФТОДИЯ
-
+            hachclient$lastLog = System.currentTimeMillis();
 // created by ЗНАХАРКА АФТОДИЯ
-        int color = hands.getTintColor();
+            System.out.println("[Hands] mixin ok, instance=" + (hands != null) + " state=" + (hands != null && hands.state()) + " fill=" + (hands != null && hands.isFill()) + " mode=" + (hands != null ? hands.mode.get() : "-"));
 // created by ЗНАХАРКА АФТОДИЯ
-        RenderSystem.setShaderColor(
+        }
 // created by ЗНАХАРКА АФТОДИЯ
-                (color >> 16 & 0xFF) / 255.0F,
+        if (hands == null || !hands.state() || !hands.isFill()) return provider;
 // created by ЗНАХАРКА АФТОДИЯ
-                (color >> 8 & 0xFF) / 255.0F,
-// created by ЗНАХАРКА АФТОДИЯ
-                (color & 0xFF) / 255.0F,
-// created by ЗНАХАРКА АФТОДИЯ
-                1.0F
-// created by ЗНАХАРКА АФТОДИЯ
-        );
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    @Inject(method = "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", at = @At("RETURN"))
-// created by ЗНАХАРКА АФТОДИЯ
-    private void hachclient$handsEnd(CallbackInfo ci) {
-// created by ЗНАХАРКА АФТОДИЯ
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        return new HandsTintProvider(provider, hands.getTintColor());
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
