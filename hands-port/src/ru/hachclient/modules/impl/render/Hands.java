@@ -18,7 +18,13 @@ import ru.hachclient.modules.settings.impl.ModeSetting;
 // created by ЗНАХАРКА АФТОДИЯ
 import ru.hachclient.modules.settings.impl.SliderSetting;
 // created by ЗНАХАРКА АФТОДИЯ
+import ru.hachclient.themes.Themes;
+// created by ЗНАХАРКА АФТОДИЯ
 import ru.hachclient.utils.render.HandsRenderer;
+// created by ЗНАХАРКА АФТОДИЯ
+
+// created by ЗНАХАРКА АФТОДИЯ
+import java.awt.Color;
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
@@ -27,10 +33,6 @@ import static ru.hachclient.Hachclient.mc;
 
 // created by ЗНАХАРКА АФТОДИЯ
 public class Hands extends Module {
-// created by ЗНАХАРКА АФТОДИЯ
-    public static Hands INSTANCE;
-// created by ЗНАХАРКА АФТОДИЯ
-
 // created by ЗНАХАРКА АФТОДИЯ
     public static volatile boolean capturing;
 // created by ЗНАХАРКА АФТОДИЯ
@@ -74,7 +76,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting rainbowScale = new SliderSetting("Масштаб радуги", 1.0F, 0.2F, 3.0F, 0.1F).setVisible(() -> isFill() && rainbow.get());
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ColorSetting fillColor = new ColorSetting("Цвет заливки", -48060).setVisible(() -> isFill() && !rainbow.get() && !autoThemeColor.get());
+    public final ColorSetting fillColor = new ColorSetting("Цвет заливки", new Color(-48060, true)).setVisible(() -> isFill() && !rainbow.get() && !autoThemeColor.get());
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting fillAlpha = new SliderSetting("Прозрачность заливки", 0.8F, 0.0F, 1.0F, 0.05F).setVisible(this::isFill);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -88,11 +90,11 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public final ModeSetting shaderStyle = new ModeSetting("Стиль шейдера", "Шейдер", "Шейдер", "HandShader", "Туманность", "Космос", "Градиент", "Homie").setVisible(this::isShader);
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ColorSetting shaderColor1 = new ColorSetting("Цвет шейдера 1", -3632385).setVisible(() -> isShader() && !autoThemeColor.get());
+    public final ColorSetting shaderColor1 = new ColorSetting("Цвет шейдера 1", new Color(-3632385, true)).setVisible(() -> isShader() && !autoThemeColor.get());
 // created by ЗНАХАРКА АФТОДИЯ
     public final BooleanSetting secondColor = new BooleanSetting("Второй цвет", false).setVisible(this::isShader);
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ColorSetting shaderColor2 = new ColorSetting("Цвет шейдера 2", -11534136).setVisible(() -> isShader() && secondColor.get() && !autoThemeColor.get());
+    public final ColorSetting shaderColor2 = new ColorSetting("Цвет шейдера 2", new Color(-11534136, true)).setVisible(() -> isShader() && secondColor.get() && !autoThemeColor.get());
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting shaderSpeed = new SliderSetting("Скорость шейдера", 1.5F, 0.05F, 2.5F, 0.05F).setVisible(this::isShader);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -100,7 +102,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting shaderGlow = new SliderSetting("Свечение шейдера", 1.2F, 0.0F, 3.0F, 0.05F).setVisible(this::isShader);
 // created by ЗНАХАРКА АФТОДИЯ
-    public final SliderSetting shaderQuality = new SliderSetting("Качество шейдера", 2.0F, 1.0F, 3.0F, 1.0F).setVisible(() -> isShader() && !shaderStyle.get().equals("Градиент"));
+    public final SliderSetting shaderQuality = new SliderSetting("Качество шейдера", 2.0F, 1.0F, 3.0F, 1.0F).setVisible(() -> isShader() && !shaderStyle.is("Градиент"));
 // created by ЗНАХАРКА АФТОДИЯ
     public final BooleanSetting stars = new BooleanSetting("Звёзды", true).setVisible(this::isShader);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -120,9 +122,9 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting glowBrightness = new SliderSetting("Яркость", 1.0F, 0.5F, 5.0F, 0.1F).setVisible(glow::get);
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ColorSetting glowColor1 = new ColorSetting("Цвет глова 1", -11713).setVisible(() -> glow.get() && !autoThemeColor.get() && !autoItemColor.get());
+    public final ColorSetting glowColor1 = new ColorSetting("Цвет глова 1", new Color(-11713, true)).setVisible(() -> glow.get() && !autoThemeColor.get() && !autoItemColor.get());
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ColorSetting glowColor2 = new ColorSetting("Цвет глова 2", -54784).setVisible(() -> glow.get() && !autoThemeColor.get() && !autoItemColor.get());
+    public final ColorSetting glowColor2 = new ColorSetting("Цвет глова 2", new Color(-54784, true)).setVisible(() -> glow.get() && !autoThemeColor.get() && !autoItemColor.get());
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting innerGlow = new SliderSetting("Внутреннее свечение", 0.65F, 0.0F, 1.5F, 0.05F).setVisible(glow::get);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -132,7 +134,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public final BooleanSetting outline = new BooleanSetting("Обводка", true);
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ColorSetting outlineColor = new ColorSetting("Цвет обводки", -1).setVisible(() -> outline.get() && !autoThemeColor.get() && !autoItemColor.get());
+    public final ColorSetting outlineColor = new ColorSetting("Цвет обводки", new Color(-1, true)).setVisible(() -> outline.get() && !autoThemeColor.get() && !autoItemColor.get());
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting outlineWidth = new SliderSetting("Толщина обводки", 1.0F, 0.5F, 2.0F, 0.5F).setVisible(outline::get);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -214,8 +216,6 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
         super("Hands", "Визуальные эффекты рук от первого лица", ModuleType.VISUAL);
 // created by ЗНАХАРКА АФТОДИЯ
-        INSTANCE = this;
-// created by ЗНАХАРКА АФТОДИЯ
         addSettings(
 // created by ЗНАХАРКА АФТОДИЯ
                 mode, autoThemeColor, autoItemColor,
@@ -250,9 +250,11 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     @Override
 // created by ЗНАХАРКА АФТОДИЯ
-    public void onEnable() {
+    public void enabled() {
 // created by ЗНАХАРКА АФТОДИЯ
         startTime = System.currentTimeMillis();
+// created by ЗНАХАРКА АФТОДИЯ
+        super.enabled();
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -260,7 +262,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     @Override
 // created by ЗНАХАРКА АФТОДИЯ
-    public void onDisable() {
+    public void disabled() {
 // created by ЗНАХАРКА АФТОДИЯ
         capturing = false;
 // created by ЗНАХАРКА АФТОДИЯ
@@ -278,6 +280,8 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
         HandsRenderer.reset();
 // created by ЗНАХАРКА АФТОДИЯ
+        super.disabled();
+// created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
 
@@ -288,7 +292,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean shouldCapture() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return isEnabled() && (!isNothing() || glow.get() || outline.get());
+        return state() && (!isNothing() || glow.get() || outline.get());
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -354,7 +358,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
         Framebuffer main = mc.getFramebuffer();
 // created by ЗНАХАРКА АФТОДИЯ
-        if (isEnabled() && capture != null && main != null) {
+        if (state() && capture != null && main != null) {
 // created by ЗНАХАРКА АФТОДИЯ
             HandsRenderer.composite(capture, main, this);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -372,7 +376,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isNothing() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return mode.get().equals("Nothing");
+        return mode.is("Nothing");
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -380,7 +384,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isFill() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return mode.get().equals("Заливка");
+        return mode.is("Заливка");
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -388,7 +392,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isShader() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return mode.get().equals("Шейдер") || isShaderMirror();
+        return mode.is("Шейдер") || isShaderMirror();
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -396,7 +400,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isMirror() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return mode.get().equals("Зеркало") || isShaderMirror();
+        return mode.is("Зеркало") || isShaderMirror();
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -404,7 +408,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isShaderMirror() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return mode.get().equals("Шейдер + Зеркало");
+        return mode.is("Шейдер + Зеркало");
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -420,7 +424,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isNormalTrail() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return isTrail() && trailMode.get().equals("Обычный");
+        return isTrail() && trailMode.is("Обычный");
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -428,7 +432,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isEnergyTrail() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return isTrail() && trailMode.get().equals("Энергия");
+        return isTrail() && trailMode.is("Энергия");
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -436,7 +440,7 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public boolean isRibbonTrail() {
 // created by ЗНАХАРКА АФТОДИЯ
-        return isTrail() && trailMode.get().equals("Ленты");
+        return isTrail() && trailMode.is("Ленты");
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -450,9 +454,9 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
         if (isFill()) return 0;
 // created by ЗНАХАРКА АФТОДИЯ
-        if (mode.get().equals("Шейдер")) return 1;
+        if (mode.is("Шейдер")) return 1;
 // created by ЗНАХАРКА АФТОДИЯ
-        if (mode.get().equals("Зеркало")) return 2;
+        if (mode.is("Зеркало")) return 2;
 // created by ЗНАХАРКА АФТОДИЯ
         return 3;
 // created by ЗНАХАРКА АФТОДИЯ
@@ -516,11 +520,11 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    // TODO: подставь сюда цвета темы своего клиента (основной / второй цвет)
-// created by ЗНАХАРКА АФТОДИЯ
     public int getThemeColor(boolean second) {
 // created by ЗНАХАРКА АФТОДИЯ
-        return second ? 0xFF7B2FFF : 0xFFC86BFF;
+        Color[] colors = Themes.DEFAULT.getColors();
+// created by ЗНАХАРКА АФТОДИЯ
+        return colors[second && colors.length > 1 ? 1 : 0].getRGB();
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
