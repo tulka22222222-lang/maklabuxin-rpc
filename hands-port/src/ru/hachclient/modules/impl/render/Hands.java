@@ -2,10 +2,6 @@ package ru.hachclient.modules.impl.render;
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-import net.minecraft.client.gl.Framebuffer;
-// created by ЗНАХАРКА АФТОДИЯ
-import net.minecraft.client.gl.SimpleFramebuffer;
-// created by ЗНАХАРКА АФТОДИЯ
 import ru.hachclient.modules.Module;
 // created by ЗНАХАРКА АФТОДИЯ
 import ru.hachclient.modules.ModuleType;
@@ -20,37 +16,25 @@ import ru.hachclient.modules.settings.impl.SliderSetting;
 // created by ЗНАХАРКА АФТОДИЯ
 import ru.hachclient.themes.Themes;
 // created by ЗНАХАРКА АФТОДИЯ
-import ru.hachclient.utils.render.HandsRenderer;
-// created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
 import java.awt.Color;
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-import static ru.hachclient.Hachclient.mc;
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
 public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
-    public static volatile boolean capturing;
-// created by ЗНАХАРКА АФТОДИЯ
-    public static Framebuffer captureTarget;
+    public static Hands INSTANCE;
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    private SimpleFramebuffer capture;
-// created by ЗНАХАРКА АФТОДИЯ
-    private boolean captureStarted;
-// created by ЗНАХАРКА АФТОДИЯ
-    private long startTime;
+    private long startTime = System.currentTimeMillis();
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
     // ===== Режим =====
 // created by ЗНАХАРКА АФТОДИЯ
-    public final ModeSetting mode = new ModeSetting("Режим", "Nothing", "Nothing", "Заливка", "Шейдер", "Зеркало", "Шейдер + Зеркало");
+    public final ModeSetting mode = new ModeSetting("Режим", "Заливка", "Nothing", "Заливка", "Шейдер", "Зеркало", "Шейдер + Зеркало");
 // created by ЗНАХАРКА АФТОДИЯ
     public final BooleanSetting autoThemeColor = new BooleanSetting("Авто цвет под тему", true);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -148,8 +132,6 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    // Энергия
-// created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting energyLength = new SliderSetting("Длина энергии", 1.0F, 0.4F, 2.0F, 0.05F).setVisible(this::isEnergyTrail);
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting energyBrightness = new SliderSetting("Яркость энергии", 1.35F, 0.5F, 2.5F, 0.05F).setVisible(this::isEnergyTrail);
@@ -161,8 +143,6 @@ public class Hands extends Module {
     public final SliderSetting energyCamera = new SliderSetting("Шлейф за камерой", 0.05F, 0.0F, 2.0F, 0.05F).setVisible(this::isEnergyTrail);
 // created by ЗНАХАРКА АФТОДИЯ
 
-// created by ЗНАХАРКА АФТОДИЯ
-    // Ленты
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting ribbonLength = new SliderSetting("Длина лент", 0.3F, 0.15F, 3.0F, 0.05F).setVisible(this::isRibbonTrail);
 // created by ЗНАХАРКА АФТОДИЯ
@@ -192,8 +172,6 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    // Обычный
-// created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting fadeSpeed = new SliderSetting("Скорость затухания", 0.04F, 0.002F, 0.2F, 0.002F).setVisible(this::isNormalTrail);
 // created by ЗНАХАРКА АФТОДИЯ
     public final SliderSetting lift = new SliderSetting("Подъём", 0.2F, 0.0F, 1.5F, 0.05F).setVisible(this::isNormalTrail);
@@ -215,6 +193,8 @@ public class Hands extends Module {
     public Hands() {
 // created by ЗНАХАРКА АФТОДИЯ
         super("Hands", "Визуальные эффекты рук от первого лица", ModuleType.VISUAL);
+// created by ЗНАХАРКА АФТОДИЯ
+        INSTANCE = this;
 // created by ЗНАХАРКА АФТОДИЯ
         addSettings(
 // created by ЗНАХАРКА АФТОДИЯ
@@ -260,83 +240,9 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    @Override
-// created by ЗНАХАРКА АФТОДИЯ
-    public void disabled() {
-// created by ЗНАХАРКА АФТОДИЯ
-        capturing = false;
-// created by ЗНАХАРКА АФТОДИЯ
-        captureTarget = null;
-// created by ЗНАХАРКА АФТОДИЯ
-        captureStarted = false;
-// created by ЗНАХАРКА АФТОДИЯ
-        if (capture != null) {
-// created by ЗНАХАРКА АФТОДИЯ
-            capture.delete();
-// created by ЗНАХАРКА АФТОДИЯ
-            capture = null;
-// created by ЗНАХАРКА АФТОДИЯ
-        }
-// created by ЗНАХАРКА АФТОДИЯ
-        HandsRenderer.reset();
-// created by ЗНАХАРКА АФТОДИЯ
-        super.disabled();
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    // ===== Захват рук (вызывается из MixinGameRenderer) =====
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public boolean shouldCapture() {
-// created by ЗНАХАРКА АФТОДИЯ
-        return state() && (!isNothing() || glow.get() || outline.get());
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
+    // старые вызовы из HeldItemRendererMixin, если они там есть - теперь ничего не делают
 // created by ЗНАХАРКА АФТОДИЯ
     public void beginCapture() {
-// created by ЗНАХАРКА АФТОДИЯ
-        if (!shouldCapture() || captureStarted || mc.player == null || mc.world == null) return;
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-        Framebuffer main = mc.getFramebuffer();
-// created by ЗНАХАРКА АФТОДИЯ
-        int width = Math.max(1, main.textureWidth);
-// created by ЗНАХАРКА АФТОДИЯ
-        int height = Math.max(1, main.textureHeight);
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-        if (capture == null) {
-// created by ЗНАХАРКА АФТОДИЯ
-            capture = new SimpleFramebuffer(width, height, true);
-// created by ЗНАХАРКА АФТОДИЯ
-        } else if (capture.textureWidth != width || capture.textureHeight != height) {
-// created by ЗНАХАРКА АФТОДИЯ
-            capture.resize(width, height);
-// created by ЗНАХАРКА АФТОДИЯ
-        }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-        capture.setClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-// created by ЗНАХАРКА АФТОДИЯ
-        capture.clear();
-// created by ЗНАХАРКА АФТОДИЯ
-        capture.beginWrite(true);
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-        captureTarget = capture;
-// created by ЗНАХАРКА АФТОДИЯ
-        capturing = true;
-// created by ЗНАХАРКА АФТОДИЯ
-        captureStarted = true;
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -344,27 +250,61 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
     public void endCapture() {
 // created by ЗНАХАРКА АФТОДИЯ
-        if (!captureStarted) return;
+    }
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-        capturing = false;
-// created by ЗНАХАРКА АФТОДИЯ
-        captureTarget = null;
-// created by ЗНАХАРКА АФТОДИЯ
-        captureStarted = false;
+    // ===== Цвет рук для заливки =====
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-        Framebuffer main = mc.getFramebuffer();
+    public int getTintColor() {
 // created by ЗНАХАРКА АФТОДИЯ
-        if (state() && capture != null && main != null) {
+        int color = rainbow.get() ? getRainbowColor() : getFillColor();
 // created by ЗНАХАРКА АФТОДИЯ
-            HandsRenderer.composite(capture, main, this);
+        float strength = fillAlpha.get();
+// created by ЗНАХАРКА АФТОДИЯ
+        if (keepShadows.get()) {
+// created by ЗНАХАРКА АФТОДИЯ
+            strength *= 1.0F - shadowStrength.get() * 0.5F;
 // created by ЗНАХАРКА АФТОДИЯ
         }
 // created by ЗНАХАРКА АФТОДИЯ
-        main.beginWrite(true);
+        return mix(0xFFFFFFFF, color, strength);
+// created by ЗНАХАРКА АФТОДИЯ
+    }
+// created by ЗНАХАРКА АФТОДИЯ
+
+// created by ЗНАХАРКА АФТОДИЯ
+    private int getRainbowColor() {
+// created by ЗНАХАРКА АФТОДИЯ
+        float hue = (getTime() * rainbowSpeed.get() * 0.25F * rainbowScale.get()) % 1.0F;
+// created by ЗНАХАРКА АФТОДИЯ
+        return Color.HSBtoRGB(hue, 0.7F, 1.0F) | 0xFF000000;
+// created by ЗНАХАРКА АФТОДИЯ
+    }
+// created by ЗНАХАРКА АФТОДИЯ
+
+// created by ЗНАХАРКА АФТОДИЯ
+    private static int mix(int from, int to, float t) {
+// created by ЗНАХАРКА АФТОДИЯ
+        t = Math.max(0.0F, Math.min(1.0F, t));
+// created by ЗНАХАРКА АФТОДИЯ
+        int r = Math.round((from >> 16 & 0xFF) + ((to >> 16 & 0xFF) - (from >> 16 & 0xFF)) * t);
+// created by ЗНАХАРКА АФТОДИЯ
+        int g = Math.round((from >> 8 & 0xFF) + ((to >> 8 & 0xFF) - (from >> 8 & 0xFF)) * t);
+// created by ЗНАХАРКА АФТОДИЯ
+        int b = Math.round((from & 0xFF) + ((to & 0xFF) - (from & 0xFF)) * t);
+// created by ЗНАХАРКА АФТОДИЯ
+        return 0xFF000000 | r << 16 | g << 8 | b;
+// created by ЗНАХАРКА АФТОДИЯ
+    }
+// created by ЗНАХАРКА АФТОДИЯ
+
+// created by ЗНАХАРКА АФТОДИЯ
+    public float getTime() {
+// created by ЗНАХАРКА АФТОДИЯ
+        return (System.currentTimeMillis() - startTime) / 1000.0F;
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
@@ -446,76 +386,6 @@ public class Hands extends Module {
 // created by ЗНАХАРКА АФТОДИЯ
 
 // created by ЗНАХАРКА АФТОДИЯ
-    /** 0 - заливка, 1 - шейдер, 2 - зеркало, 3 - шейдер + зеркало, 4 - nothing */
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getModeIndex() {
-// created by ЗНАХАРКА АФТОДИЯ
-        if (isNothing()) return 4;
-// created by ЗНАХАРКА АФТОДИЯ
-        if (isFill()) return 0;
-// created by ЗНАХАРКА АФТОДИЯ
-        if (mode.is("Шейдер")) return 1;
-// created by ЗНАХАРКА АФТОДИЯ
-        if (mode.is("Зеркало")) return 2;
-// created by ЗНАХАРКА АФТОДИЯ
-        return 3;
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    /** 0 - Шейдер, 1 - Туманность, 2 - Космос, 3 - Градиент, 4 - HandShader, 5 - Homie */
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getShaderStyleIndex() {
-// created by ЗНАХАРКА АФТОДИЯ
-        switch (shaderStyle.get()) {
-// created by ЗНАХАРКА АФТОДИЯ
-            case "HandShader": return 4;
-// created by ЗНАХАРКА АФТОДИЯ
-            case "Туманность": return 1;
-// created by ЗНАХАРКА АФТОДИЯ
-            case "Космос": return 2;
-// created by ЗНАХАРКА АФТОДИЯ
-            case "Градиент": return 3;
-// created by ЗНАХАРКА АФТОДИЯ
-            case "Homie": return 5;
-// created by ЗНАХАРКА АФТОДИЯ
-            default: return 0;
-// created by ЗНАХАРКА АФТОДИЯ
-        }
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    /** 0 - обычный, 1 - энергия, 2 - ленты */
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getTrailModeIndex() {
-// created by ЗНАХАРКА АФТОДИЯ
-        return isRibbonTrail() ? 2 : (isEnergyTrail() ? 1 : 0);
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getShaderQualitySteps() {
-// created by ЗНАХАРКА АФТОДИЯ
-        int quality = Math.round(shaderQuality.get());
-// created by ЗНАХАРКА АФТОДИЯ
-        return quality == 1 ? 3 : (quality == 3 ? 8 : 5);
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public float getTime() {
-// created by ЗНАХАРКА АФТОДИЯ
-        return (System.currentTimeMillis() - startTime) / 1000.0F;
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
     // ===== Цвета =====
 // created by ЗНАХАРКА АФТОДИЯ
 
@@ -533,54 +403,6 @@ public class Hands extends Module {
     public int getFillColor() {
 // created by ЗНАХАРКА АФТОДИЯ
         return autoThemeColor.get() ? getThemeColor(false) : fillColor.get();
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getShaderColor1() {
-// created by ЗНАХАРКА АФТОДИЯ
-        return autoThemeColor.get() ? getThemeColor(false) : shaderColor1.get();
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getShaderColor2() {
-// created by ЗНАХАРКА АФТОДИЯ
-        if (autoThemeColor.get()) {
-// created by ЗНАХАРКА АФТОДИЯ
-            return secondColor.get() ? getThemeColor(true) : getThemeColor(false);
-// created by ЗНАХАРКА АФТОДИЯ
-        }
-// created by ЗНАХАРКА АФТОДИЯ
-        return secondColor.get() ? shaderColor2.get() : shaderColor1.get();
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getGlowColor1() {
-// created by ЗНАХАРКА АФТОДИЯ
-        return autoThemeColor.get() ? getThemeColor(false) : glowColor1.get();
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getGlowColor2() {
-// created by ЗНАХАРКА АФТОДИЯ
-        return autoThemeColor.get() ? getThemeColor(true) : glowColor2.get();
-// created by ЗНАХАРКА АФТОДИЯ
-    }
-// created by ЗНАХАРКА АФТОДИЯ
-
-// created by ЗНАХАРКА АФТОДИЯ
-    public int getOutlineColor() {
-// created by ЗНАХАРКА АФТОДИЯ
-        if (autoItemColor.get()) return -1;
-// created by ЗНАХАРКА АФТОДИЯ
-        return autoThemeColor.get() ? getThemeColor(false) : outlineColor.get();
 // created by ЗНАХАРКА АФТОДИЯ
     }
 // created by ЗНАХАРКА АФТОДИЯ
